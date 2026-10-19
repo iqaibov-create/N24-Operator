@@ -12,8 +12,8 @@ android {
         applicationId = "ge.n24.operator"
         minSdk = 23
         targetSdk = 35
-        versionCode = 27
-        versionName = "2.7"
+        versionCode = 28
+        versionName = "2.8"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

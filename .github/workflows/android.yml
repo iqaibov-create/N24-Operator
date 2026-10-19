@@ -1,8 +1,8 @@
-name: N24 Operator APK
+name: N24 Native Operator APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,24 +12,26 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      # GitHub-hosted runners already include the Android SDK.
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Restore Firebase configuration
+      - name: Restore Firebase config when available
+        shell: bash
         env:
-          FIREBASE_CONFIG: ${{ secrets.N24_FIREBASE_JSON_BASE64 }}
+          N24_FIREBASE_JSON_BASE64: ${{ secrets.N24_FIREBASE_JSON_BASE64 }}
         run: |
-          if [ -n "$FIREBASE_CONFIG" ]; then
-            printf '%s' "$FIREBASE_CONFIG" | base64 --decode > app/google-services.json
-            echo "Firebase configuration restored; push may work when the server is also configured."
+          if [ -n "$N24_FIREBASE_JSON_BASE64" ]; then
+            printf '%s' "$N24_FIREBASE_JSON_BASE64" | base64 --decode > app/google-services.json
+            echo 'FCM client configuration enabled'
           else
-            echo "::warning::Building a chat-only APK without Firebase push. Add N24_FIREBASE_JSON_BASE64 later."
+            echo '::warning::Firebase file not configured, native chat works but push notifications are disabled'
           fi
-      - name: Build debug APK
+      - name: Build APK
         run: gradle --no-daemon :app:assembleDebug
-      - name: Upload Android APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: N24-Operator-V22-debug-APK
+          name: N24-Native-Operator-V24-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14

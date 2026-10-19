@@ -1,58 +1,40 @@
-# N24 Operator V22 — Termux + GitHub ilə APK
+# N24 Native Operator V24 (WebView YOXDUR)
 
-Bu ZIP **Android Kotlin mənbə kodudur, hazır APK deyil**. GitHub Actions onu debug APK kimi yığır.
+Bu Android tətbiqi yalnız canlı dəstək üçün nəzərdə tutulub: admin email/parolu ilə giriş, açıq/bağlı/arxiv söhbətlər, native mesaj ekranı, cavab verərkən **Operator / Baş admin / Moderator / Redaktor** etiketi seçimi. HTML/WebView yoxdur.
 
-## 1. GitHub-da ayrıca repo yarat
+## Quraşdırma ardıcıllığı
+1. ƏVVƏL `XeberPortal-V24-NATIVE-CHAT-SERVER-UPDATE.zip`-i `public_html`-ə açıb `https://n24.ge/v24-install.php` quraşdırıcısını super admin kimi işə salın.
+2. GitHub reposu əvvəlki `iqaibov-create/N24-Operator` olaraq qalır. Termux ilə bu layihə fayllarını həmin repoya göndərin.
+3. Android app-da admin email və parolunu yazın.
 
-GitHub-da `iqaibov-create` hesabında **N24-Operator** adlı yeni, boş *Public* və ya *Private* repo yarat. `Ali-eba-Android` reposuna bu faylları yerləşdirmə.
-
-## 2. Termux əmrləri (telefondan)
-
-ZIP-i telefonun **Download** qovluğuna endir və Termux-da:
-
-```sh
-termux-setup-storage
-pkg update -y
-pkg install git unzip -y
-mkdir -p "$HOME/N24-Operator"
-cd "$HOME/N24-Operator"
-unzip -o /sdcard/Download/N24-Operator-V22-ANDROID-GITHUB-SOURCE.zip -d .
-ls -la
+### Termux əmrləri
+```bash
+cd ~/N24-Operator
+unzip -o /sdcard/Download/N24-Operator-V24-NATIVE-ANDROID-SOURCE.zip -d .
+# V22 WebView Kotlin mənbələrini layihədən çıxarırıq:
+rm -f app/src/main/java/ge/n24/operator/MainActivity.kt app/src/main/java/ge/n24/operator/ChatMessagingService.kt
+git add -A
+git commit -m "N24 native operator V24"
+git push origin main
 ```
 
-`app` və `.github` qovluqları kökdə olmalıdır. Sonra:
+Sonra GitHub → N24-Operator → Actions → `N24 Native Operator APK` → Artifacts → `N24-Native-Operator-V24-APK` yüklənir; ZIP içində `app-debug.apk` var.
 
-```sh
-cd "$HOME/N24-Operator"
-git init
-git branch -M main
-git add .
-git commit -m "N24 Operator V22 initial build"
-git remote add origin https://github.com/iqaibov-create/N24-Operator.git
-git push -u origin main
-```
+**Qeyd:** Köhnə debug APK ilə imza fərqlidirsə Android yenisini quraşdırmağa icazə verməyəcək. O halda köhnə `N24 Operator` tətbiqini silib, yeni APK-ni quraşdırın. Saytın mesajları serverdə saxlandığı üçün silinmir.
 
-GitHub istifadəçi adı/parol istəsə, adi parol yox, **Personal Access Token** və ya `gh auth login` istifadə et. `git commit` zamanı ad/e-poçt istəsə, şəxsi Git konfiqurasiyanı daxil et.
+## Real bildiriş və səs üçün Firebase
+1. Firebase Console-da Android tətbiqi əlavə edin: `ge.n24.operator`.
+2. `google-services.json`-ı alın, faylı base64 koduna çevirin (`base64 -w 0 google-services.json` uyğun olmayanda `base64 google-services.json | tr -d '\n'`).
+3. GitHub repo → Settings → Secrets and variables → Actions → New repository secret:
+   - Name: `N24_FIREBASE_JSON_BASE64`
+   - Value: base64 məzmunu.
+4. Saytın serverində Firebase service account JSON-u `public_html`-dən **kənarda** `n24_private_firebase/firebase-service-account.json` kimi yerləşdirin (V20 README-dəki kimi). **Bu şəxsi açarı GitHub-a yükləməyin və heç kimə göndərməyin.**
+5. GitHub Actions-da build yenidən başladın, tətbiqi quraşdırın, Android bildiriş icazəsi verin.
 
-## 3. APK yüklə
+Başqa telefondan `n24.ge` saytının chat widgetinə mesaj yazın. Operator APK bildirişi səsli göstərməlidir. Server Firebase tənzimlənməyibsə, mesajlar yenə native tətbiqdə görünür, amma push gəlmir.
 
-GitHub → `N24-Operator` → **Actions** → **N24 Operator APK** → son uğurlu run → **Artifacts** → `N24-Operator-V22-debug-APK`.
-
-Artifact ZIP-in içində `app-debug.apk` olacaq. Bu debug APK-dir; Play Store üçün release deyil.
-
-## 4. Firebase push (sonrakı addım)
-
-Firebase olmadan da **operator yazışma paneli işləyir**, amma tətbiq bağlıykən push bildirişi gəlmir. Bildiriş üçün:
-
-1. Firebase-də Android app yaradıb **package** `ge.n24.operator` seç.
-2. `google-services.json` endir; Termux-da `base64 -w0 /sdcard/Download/google-services.json` ilə kodlaşdır.
-3. GitHub repoda **Settings → Secrets and variables → Actions** bölməsində `N24_FIREBASE_JSON_BASE64` yarat və həmin base64 məzmunu daxil et.
-4. `Actions → N24 Operator APK → Run workflow` ilə yenidən yığ.
-5. Serverdə FCM üçün ayrıca **service-account** məxfi açarı `public_html` xaricində qurulmalıdır. Onu GitHub-a, APK-yə, çatda və ya ictimai qovluğa qoyma.
-6. Saytdakı V20 `n20_operator_push_tokens` cədvəli və FCM göndərmə PHP kodu da düzgün quraşdırılmalıdır.
-
-## 5. Sayt hissəsi
-
-Əvvəlki V19–V21 sayt modulları quraşdırılmış olmalıdır. V22 üçün yalnız `XeberPortal-V22-OPERATOR-MOBIL-PANEL-FIX.zip` sayt yeniləməsini `public_html` daxilinə açmaq kifayətdir; ayrıca SQL yoxdur.
-
-APK-də **Admin** düyməsi giriş üçün, **Söhbətlər** isə operator panelini açmaq üçündür. Login məlumatlarını ZIP-ə daxil etmə.
+## Qeydlər
+- Native ekranlar Java/Android UI komponentləri ilə çəkilir, WebView yoxdur.
+- Çat siyahısı tətbiq açıq olanda ~6.5 saniyədən bir yenilənir. Tətbiq bağlı olarkən dəyişiklik üçün FCM lazımdır.
+- Operator adı yalnız vizual etiketdir; real admin hüququnu dəyişmir.
+- GitHub Actions build burada icra edilməyib. Build nəticəsini Actions-dan yoxlayın.
